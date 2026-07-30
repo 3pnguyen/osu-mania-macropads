@@ -7,8 +7,8 @@
 <div align="center">
     <table>
         <tr>
-            <td><img src="/images/irl_1.jpg" width="600" /></td>
-            <td><img src="/images/irl_2.jpg" width="600" /></td>
+            <td><img src="/4k-mania-macropad/images/irl_1.jpg" width="600" /></td>
+            <td><img src="/4k-mania-macropad/images/irl_2.jpg" width="600" /></td>
         </tr>
     </table>
 </div>
@@ -25,7 +25,7 @@ And there is more than one advantage to simplicity then just time. Having the ci
 For my personal build and playing osu! mania, I'm using low-profile silent switches. I'm a simpleton and chose low-profile switches as a middle-ground between standard MX switches and hall-effect switches. In terms of the silent aspect, I kept getting noise complaints from playing on my main keyboard. I've only played 4K on mania and I'm going to keep it that way, maybe if I'm crazy I'll end up back here with a 4+ switch version.
 
 <div align="center">
-    <img src="/images/schematic.png" width="600" />
+    <img src="/4k-mania-macropad/images/schematic.png" width="600" />
 </div>
 
 ## 📐 CAD
@@ -33,5 +33,5 @@ For my personal build and playing osu! mania, I'm using low-profile silent switc
 [Amazing CAD here](https://cad.onshape.com/documents/9898a71a7063f75c27dee89e/w/abe99dc69ae22e45c7d1f3d9/e/48652c76c81342aff42df9c0?renderMode=0&uiState=6a49e50b41ec6949cee9c578)
 
 <div align="center">
-    <img src="/images/cad.png" width="600" />
+    <img src="/4k-mania-macropad/images/cad.png" width="600" />
 </div>
