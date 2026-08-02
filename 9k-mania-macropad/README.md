@@ -20,6 +20,8 @@ This macropad was created as a commision by a friend who is a much better player
 
 This project is a direct contrast from my personal 4K macropad.
 
+Since this is hall effect, calibration is required. Using a serial web interface like [serialmonitor.org](https://serialmonitor.org) and holding down the dedicated push-button enters calibration mode.
+
 <div align="center">
     <img src="/9k-mania-macropad/images/schematic.png" width="600" />
 </div>
