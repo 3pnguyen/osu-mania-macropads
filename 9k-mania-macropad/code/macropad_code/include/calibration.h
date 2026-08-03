@@ -5,8 +5,8 @@
 #include <EEPROM.h>
 
 struct KeyCalibrationProfile {
-    int adc_min;
-    int adc_max;
+    int adc_released;
+    int adc_pressed;
 };
 
 inline constexpr int eeprom_start_address = 0;
@@ -30,17 +30,20 @@ inline void saveCalibration(const KeyCalibrationProfile *keyProfiles, int totalK
     }
 }
 
-inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int totalKeys) {
+inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int totalKeys, bool invert_adc) {
     bool needsCalibration = false;
 
     for (int i = 0; i < totalKeys; i++) {
         const bool valuesOutOfRange =
-            keyProfiles[i].adc_min < 0 ||
-            keyProfiles[i].adc_min > adc_max_value ||
-            keyProfiles[i].adc_max < 0 ||
-            keyProfiles[i].adc_max > adc_max_value;
+            keyProfiles[i].adc_released < 0 ||
+            keyProfiles[i].adc_released > adc_max_value ||
+            keyProfiles[i].adc_pressed < 0 ||
+            keyProfiles[i].adc_pressed > adc_max_value;
+        const bool directionInvalid = invert_adc
+            ? keyProfiles[i].adc_pressed >= keyProfiles[i].adc_released
+            : keyProfiles[i].adc_pressed <= keyProfiles[i].adc_released;
 
-        if (valuesOutOfRange || keyProfiles[i].adc_max <= keyProfiles[i].adc_min) {
+        if (valuesOutOfRange || directionInvalid) {
             Serial.print("Invalid calibration data for key ");
             Serial.println(i);
             needsCalibration = true;
@@ -57,17 +60,17 @@ inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int total
         for (int i = 0 ; i < totalKeys; i++) {
             Serial.print("Key ");
             Serial.print(i);
-            Serial.print(" min: ");
-            Serial.print(keyProfiles[i].adc_min);
-            Serial.print(" max: ");
-            Serial.println(keyProfiles[i].adc_max);
+            Serial.print(" released: ");
+            Serial.print(keyProfiles[i].adc_released);
+            Serial.print(" pressed: ");
+            Serial.println(keyProfiles[i].adc_pressed);
         }
     }
 
     return true;
 }
 
-inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *keyProfiles, int totalKeys, int ledPin, int ledBrightness) {
+inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *keyProfiles, int totalKeys, int ledPin, int ledBrightness, bool invert_adc) {
     analogWrite(ledPin, ledBrightness);
     Serial.println("\n==================================== Hall Effect Calibration Mode ====================================");
 
@@ -90,7 +93,7 @@ inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *key
     Serial.println("\nCapturing baseline resting values... ");
 
     for (int i = 0; i < totalKeys; i++) {
-        keyProfiles[i].adc_min = adc->adc0->analogRead(switchPins[i]);
+        keyProfiles[i].adc_released = adc->adc0->analogRead(switchPins[i]);
     }
 
     Serial.println("DONE!");
@@ -117,9 +120,9 @@ inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *key
 
     unsigned long startTime = millis();
 
-    // Initialize max array with current min values before tracking the peaks (gives initial baseline)
+    // Initialize the pressed endpoints with the released readings before tracking travel.
     for (int i = 0; i < totalKeys; i++) {
-        keyProfiles[i].adc_max = keyProfiles[i].adc_min;
+        keyProfiles[i].adc_pressed = keyProfiles[i].adc_released;
     }
 
     // Actively track peak values while the user holds/mashes the keys
@@ -127,9 +130,10 @@ inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *key
         for (int i = 0; i < totalKeys; i++) {
             uint16_t liveAdc = adc->adc0->analogRead(switchPins[i]);
             
-            // Track the absolute highest reading observed
-            if (liveAdc > keyProfiles[i].adc_max) {
-                keyProfiles[i].adc_max = liveAdc;
+            // Track the endpoint in the configured direction.
+            if ((!invert_adc && liveAdc > keyProfiles[i].adc_pressed) ||
+                (invert_adc && liveAdc < keyProfiles[i].adc_pressed)) {
+                keyProfiles[i].adc_pressed = liveAdc;
             }
         }
         delay(5); // Small delay to avoid overloading the processor loop

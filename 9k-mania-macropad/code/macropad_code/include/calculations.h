@@ -32,15 +32,24 @@ inline void setupCalculations(float actuation_mm, float top_deadband_mm, float b
     settings.rt_release_sensitivity = rt_release_sensitivity;
 }
 
-inline float normalizeADC(int adc_live, int adc_min, int adc_max) { // normalize ADC value to 0.0 to 1.0
-    if (adc_live < adc_min) adc_live = adc_min; // clamp
-    if (adc_live > adc_max) adc_live = adc_max;
-    
-    return (float)(adc_live - adc_min) / (adc_max - adc_min); 
+inline float normalizeADC(int adc_live, int adc_released, int adc_pressed, bool invert_adc) { // normalize ADC value to 0.0 to 1.0
+    if (adc_released == adc_pressed) return 0.0f;
+
+    if (invert_adc) {
+        if (adc_live > adc_released) adc_live = adc_released; // clamp
+        if (adc_live < adc_pressed) adc_live = adc_pressed;
+
+        return (float)(adc_released - adc_live) / (adc_released - adc_pressed);
+    }
+
+    if (adc_live < adc_released) adc_live = adc_released; // clamp
+    if (adc_live > adc_pressed) adc_live = adc_pressed;
+
+    return (float)(adc_live - adc_released) / (adc_pressed - adc_released);
 }
 
-inline float getDistanceMM(int adc_live, int adc_min, int adc_max) { // convert normalized ADC value to distance
-    float normalized_adc = normalizeADC(adc_live, adc_min, adc_max);
+inline float getDistanceMM(int adc_live, int adc_released, int adc_pressed, bool invert_adc) { // convert normalized ADC value to distance
+    float normalized_adc = normalizeADC(adc_live, adc_released, adc_pressed, invert_adc);
     
     if (normalized_adc <= 0.0f) return 0.0f; // clamp
     if (normalized_adc >= 1.0f) return total_travel_mm;

@@ -19,6 +19,7 @@
 #define BOTTOM_DEADBAND_MM 0.15
 #define RT_PRESS_SENSITIVITY 0.15f 
 #define RT_RELEASE_SENSITIVITY 0.15f
+#define INVERT_ADC_READINGS true
 
 #define LED_PIN 3
 #define LED_BRIGHTNESS (int)(0.5 * 255)
@@ -65,7 +66,7 @@ void setup() {
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
 
   loadCalibration(keyProfiles, total_keys); // Load calibration data
-  calibrationValid = checkCalibration(keyProfiles, total_keys); // Check if calibration data is valid
+  calibrationValid = checkCalibration(keyProfiles, total_keys, INVERT_ADC_READINGS); // Check if calibration data is valid
 
   blinkLED(LED_PIN, LED_BRIGHTNESS, 1, LED_DELAY);
   delay(100);
@@ -77,8 +78,8 @@ void loop() {
     unsigned long holdDuration = selection_button.getHoldDuration();
 
     if (holdDuration > 500) {
-      runCalibration(adc, switchPins, keyProfiles, total_keys, LED_PIN, LED_BRIGHTNESS);
-      calibrationValid = checkCalibration(keyProfiles, total_keys);
+      runCalibration(adc, switchPins, keyProfiles, total_keys, LED_PIN, LED_BRIGHTNESS, INVERT_ADC_READINGS);
+      calibrationValid = checkCalibration(keyProfiles, total_keys, INVERT_ADC_READINGS);
     } else {
       selection = (selection + 1) % total_sets;
       Serial.print("Selection = ");
@@ -94,7 +95,7 @@ void loop() {
 
   for (int i = 0; i < total_keys; i++) {
     int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
-    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_min, keyProfiles[i].adc_max); // Convert normalized ADC value to distance
+    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
     const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
     
     if (command.type == CommandType::Key) {
