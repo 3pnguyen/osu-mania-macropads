@@ -33,11 +33,11 @@ extern const KeyCommand switchKeysSetTwo[total_keys] = {
     { CommandType::Key, KEY_ESC, nullptr },
     { CommandType::Key, KEY_F3, nullptr },
     { CommandType::Key, KEY_F4, nullptr },
-    { CommandType::Text, '\0', "mode=mania key=4"},
-    { CommandType::Text, '\0', "mode=mania key=7"},
+    { CommandType::Text, '\0', "mode=mania"},
     { CommandType::Text, '\0', "mode=osu"},
-    { CommandType::None, '\0', nullptr },
-    { CommandType::None, '\0', nullptr },
+    { CommandType::Text, '\0', "key=4"},
+    { CommandType::Text, '\0', "key=7" },
+    { CommandType::Key, KEY_BACKSPACE, nullptr },
     { CommandType::None, '\0', nullptr },
     { CommandType::None, '\0', nullptr }
 };
