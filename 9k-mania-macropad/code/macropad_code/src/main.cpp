@@ -25,8 +25,6 @@
 #define LED_BRIGHTNESS (int)(0.5 * 255)
 #define LED_DELAY 150
 
-//#define DISABLE_KEYPRESSES // temporary fix to a bug
-
 // --------------------------------------------------------------------------------------------------------------
 
 const int total_sets = 2;
@@ -107,17 +105,15 @@ void loop() {
     return;
   }
 
-  #ifndef DISABLE_KEYPRESSES
-    for (int i = 0; i < total_keys; i++) {
-      int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
-      float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
-      const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
-      
-      if (command.type == CommandType::Key) {
-        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
-      } else if (command.type == CommandType::Text) {
-        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
-      }
+  for (int i = 0; i < total_keys; i++) {
+    int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
+    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
+    const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
+    
+    if (command.type == CommandType::Key) {
+      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
+    } else if (command.type == CommandType::Text) {
+      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
     }
-  #endif
+  }
 }
