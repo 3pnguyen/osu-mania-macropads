@@ -99,6 +99,10 @@ void loop() {
   }
 
   if (!calibrationValid) {
+    if (statusCheck.isReady()) {
+      statusCheck.reset();
+      Serial.println("Please recalibrate... ");
+    }
     delay(10);
     return;
   }

@@ -11,6 +11,7 @@ struct KeyCalibrationProfile {
 
 inline constexpr int eeprom_start_address = 0;
 inline constexpr int adc_max_value = 4095;
+inline constexpr int adc_min_calibration_range = 100; // 100 ADC units
 
 inline void loadCalibration(KeyCalibrationProfile *keyProfiles, int totalKeys) {
     int address = eeprom_start_address;
@@ -42,8 +43,11 @@ inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int total
         const bool directionInvalid = invert_adc
             ? keyProfiles[i].adc_pressed >= keyProfiles[i].adc_released
             : keyProfiles[i].adc_pressed <= keyProfiles[i].adc_released;
+        const bool rangeInvalid =
+            abs(keyProfiles[i].adc_pressed - keyProfiles[i].adc_released)
+            < adc_min_calibration_range;
 
-        if (valuesOutOfRange || directionInvalid) {
+        if (valuesOutOfRange || directionInvalid || rangeInvalid) {
             Serial.print("Invalid calibration data for key ");
             Serial.println(i);
             needsCalibration = true;
