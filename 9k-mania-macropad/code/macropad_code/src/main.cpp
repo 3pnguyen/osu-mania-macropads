@@ -25,6 +25,8 @@
 #define LED_BRIGHTNESS (int)(0.5 * 255)
 #define LED_DELAY 150
 
+//#define DISABLE_KEYPRESSES // temporary fix to a bug
+
 // --------------------------------------------------------------------------------------------------------------
 
 const int total_sets = 2;
@@ -41,7 +43,7 @@ void blinkLED(int pin, int brightness, int cycles, int delay_ms) {
   for (int i = 0; i < cycles; i++) {
         analogWrite(pin, brightness);
         delay(delay_ms);
-        digitalWrite(pin, LOW);
+        analogWrite(pin, 0);
         delay(delay_ms);
   }
 };
@@ -53,6 +55,9 @@ void setup() {
   #endif
 
   Keyboard.begin();
+  pinMode(LED_PIN, OUTPUT);
+  analogWrite(LED_PIN, 0);
+  selection_button.begin();
 
   setupCalculations(ACTUATION_MM, TOP_DEADBAND_MM, BOTTOM_DEADBAND_MM, RT_PRESS_SENSITIVITY, RT_RELEASE_SENSITIVITY);
 
@@ -88,26 +93,27 @@ void loop() {
     }
   }
 
-  if (!calibrationValid) {
-    delay(10);
-    return;
-  }
-
-  for (int i = 0; i < total_keys; i++) {
-    int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
-    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
-    const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
-    
-    if (command.type == CommandType::Key) {
-      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
-    } else if (command.type == CommandType::Text) {
-      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
-    }
-  }
-
   if (statusCheck.isReady()) { 
     statusCheck.reset(); // shows that the serial communication is working without having to block the main loop via !serial in setup()
     Serial.println("Working... ");
   }
 
+  if (!calibrationValid) {
+    delay(10);
+    return;
+  }
+
+  #ifndef DISABLE_KEYPRESSES
+    for (int i = 0; i < total_keys; i++) {
+      int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
+      float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
+      const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
+      
+      if (command.type == CommandType::Key) {
+        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
+      } else if (command.type == CommandType::Text) {
+        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
+      }
+    }
+  #endif
 }

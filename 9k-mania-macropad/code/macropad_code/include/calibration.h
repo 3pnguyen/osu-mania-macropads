@@ -149,5 +149,5 @@ inline void runCalibration(ADC *adc, int *switchPins, KeyCalibrationProfile *key
 
     Serial.println("DONE!");
     Serial.println("Calibration profile locked in. Rebooting baseline logic.\n");
-    digitalWrite(ledPin, LOW);
+    analogWrite(ledPin, 0);
 }

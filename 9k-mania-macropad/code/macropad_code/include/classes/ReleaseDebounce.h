@@ -11,6 +11,7 @@ class ReleaseDebounce {
 
   public:
     ReleaseDebounce(uint8_t buttonPin);
+    void begin();
     bool update();
     bool isPressed();
     unsigned long getHoldDuration() const;

@@ -10,10 +10,13 @@
 
 ReleaseDebounce::ReleaseDebounce(uint8_t buttonPin) {
   pin = buttonPin;
-  pinMode(pin, INPUT_PULLUP);
   pressedFlag = false;
   pressStartTime = 0;
   lastHoldDuration = 0;
+}
+
+void ReleaseDebounce::begin() {
+  pinMode(pin, INPUT_PULLUP);
 }
 
 bool ReleaseDebounce::update() {
