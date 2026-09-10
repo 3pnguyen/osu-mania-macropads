@@ -20,6 +20,15 @@ inline void loadCalibration(KeyCalibrationProfile *keyProfiles, int totalKeys) {
         EEPROM.get(address, keyProfiles[i]);
         address += sizeof(KeyCalibrationProfile);
     }
+
+    for (int i = 0 ; i < totalKeys; i++) {
+        Serial.print("Key ");
+        Serial.print(i);
+        Serial.print(" released: ");
+        Serial.print(keyProfiles[i].adc_released);
+        Serial.print(" pressed: ");
+        Serial.println(keyProfiles[i].adc_pressed);
+    }
 }
 
 inline void saveCalibration(const KeyCalibrationProfile *keyProfiles, int totalKeys) {
@@ -69,6 +78,26 @@ inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int total
             Serial.print(" pressed: ");
             Serial.println(keyProfiles[i].adc_pressed);
         }
+    }
+
+    return true;
+}
+
+inline bool checkCalibrationIndividual(const KeyCalibrationProfile keyProfile, bool invert_adc) {
+    const bool valuesOutOfRange =
+        keyProfile.adc_released < 0 ||
+        keyProfile.adc_released > adc_max_value ||
+        keyProfile.adc_pressed < 0 ||
+        keyProfile.adc_pressed > adc_max_value;
+    const bool directionInvalid = invert_adc
+        ? keyProfile.adc_pressed >= keyProfile.adc_released
+        : keyProfile.adc_pressed <= keyProfile.adc_released;
+    const bool rangeInvalid =
+        abs(keyProfile.adc_pressed - keyProfile.adc_released)
+        < adc_min_calibration_range;
+
+    if (valuesOutOfRange || directionInvalid || rangeInvalid) {
+        return false;
     }
 
     return true;

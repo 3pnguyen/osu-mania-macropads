@@ -19,7 +19,7 @@
 #define BOTTOM_DEADBAND_MM 0.15
 #define RT_PRESS_SENSITIVITY 0.15f 
 #define RT_RELEASE_SENSITIVITY 0.15f
-#define INVERT_ADC_READINGS true
+#define INVERT_ADC_READINGS false
 
 #define LED_PIN 3
 #define LED_BRIGHTNESS (int)(0.5 * 255)
@@ -35,7 +35,7 @@ KeyCalibrationProfile keyProfiles[total_keys];
 RapidTriggerProfile rapidTriggerProfiles[total_keys];
 int switchPins[total_keys] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9};
 ADC *adc = new ADC();
-bool calibrationValid = false;
+bool calibrationPerSwitchValid[total_keys] = {true, true, true, true, true, true, true, true, true, true};
 
 void blinkLED(int pin, int brightness, int cycles, int delay_ms) {
   for (int i = 0; i < cycles; i++) {
@@ -69,7 +69,22 @@ void setup() {
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
 
   loadCalibration(keyProfiles, total_keys); // Load calibration data
-  calibrationValid = checkCalibration(keyProfiles, total_keys, INVERT_ADC_READINGS); // Check if calibration data is valid
+
+  for (int i = 0; i < 10; i++) {
+    calibrationPerSwitchValid[i] = checkCalibrationIndividual(keyProfiles[i], INVERT_ADC_READINGS);
+    if (calibrationPerSwitchValid[i] == true) {
+      Serial.print("Valid calibration -> ");
+      Serial.print("Key ");
+      Serial.print(i);
+      Serial.print(" released: ");
+      Serial.print(keyProfiles[i].adc_released);
+      Serial.print(" pressed: ");
+      Serial.println(keyProfiles[i].adc_pressed);
+    } else {
+      Serial.print("Invalid calibration for key ");
+      Serial.println(i);
+    }
+  }
 
   blinkLED(LED_PIN, LED_BRIGHTNESS, 1, LED_DELAY);
   delay(100);
@@ -82,7 +97,21 @@ void loop() {
 
     if (holdDuration > 500) {
       runCalibration(adc, switchPins, keyProfiles, total_keys, LED_PIN, LED_BRIGHTNESS, INVERT_ADC_READINGS);
-      calibrationValid = checkCalibration(keyProfiles, total_keys, INVERT_ADC_READINGS);
+      for (int i = 0; i < 10; i++) {
+        calibrationPerSwitchValid[i] = checkCalibrationIndividual(keyProfiles[i], INVERT_ADC_READINGS);
+        if (calibrationPerSwitchValid[i] == true) {
+          Serial.print("Valid calibration -> ");
+          Serial.print("Key ");
+          Serial.print(i);
+          Serial.print(" released: ");
+          Serial.print(keyProfiles[i].adc_released);
+          Serial.print(" pressed: ");
+          Serial.println(keyProfiles[i].adc_pressed);
+        } else {
+          Serial.print("Invalid calibration for key ");
+          Serial.println(i);
+        }
+      }
     } else {
       selection = (selection + 1) % total_sets;
       Serial.print("Selection = ");
@@ -96,24 +125,17 @@ void loop() {
     Serial.println("Working... ");
   }
 
-  if (!calibrationValid) {
-    if (statusCheck.isReady()) {
-      statusCheck.reset();
-      Serial.println("Please recalibrate... ");
-    }
-    delay(10);
-    return;
-  }
-
   for (int i = 0; i < total_keys; i++) {
     int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
     float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
     const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
     
-    if (command.type == CommandType::Key) {
-      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
-    } else if (command.type == CommandType::Text) {
-      isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
+    if (calibrationPerSwitchValid[i] == true) {
+      if (command.type == CommandType::Key) {
+        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
+      } else if (command.type == CommandType::Text) {
+        isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
+      }
     }
   }
 }
