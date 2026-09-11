@@ -95,7 +95,7 @@ void loop() {
   if (selection_button.update()) {
     unsigned long holdDuration = selection_button.getHoldDuration();
 
-    if (holdDuration > 500) {
+    if (holdDuration > 3000) {
       runCalibration(adc, switchPins, keyProfiles, total_keys, LED_PIN, LED_BRIGHTNESS, INVERT_ADC_READINGS);
       for (int i = 0; i < 10; i++) {
         calibrationPerSwitchValid[i] = checkCalibrationIndividual(keyProfiles[i], INVERT_ADC_READINGS);
