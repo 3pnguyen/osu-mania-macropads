@@ -20,7 +20,9 @@ This macropad was created as a commision by a friend who is a much better player
 
 This project is a direct contrast from my personal 4K macropad.
 
-Since this is hall effect, calibration is required. Using a serial web interface like [serialmonitor.org](https://serialmonitor.org) and holding down the dedicated push-button enters calibration mode.
+Since this is hall effect, calibration is required. Using a serial web interface like [serialmonitor.org](https://serialmonitor.org) or [Fyris's Serial Monitor](https://fyrisme.github.io/serial-monitor/) and holding down the dedicated push-button enters calibration mode.
+
+**If key rollover does not work for all keys, modify the KEYBOARD_SIZE macro from 8 -> 16 in usb_desc.h**
 
 <div align="center">
     <img src="/9k-mania-macropad/images/schematic.png" width="600" />

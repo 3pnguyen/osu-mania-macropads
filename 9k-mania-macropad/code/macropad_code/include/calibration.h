@@ -14,6 +14,8 @@ inline constexpr int adc_max_value = 4095;
 inline constexpr int adc_min_calibration_range = 100; // 100 ADC units
 
 inline void loadCalibration(KeyCalibrationProfile *keyProfiles, int totalKeys) {
+    Serial.println();
+    
     int address = eeprom_start_address;
 
     for (int i = 0; i < totalKeys; i++) {
@@ -41,6 +43,8 @@ inline void saveCalibration(const KeyCalibrationProfile *keyProfiles, int totalK
 }
 
 inline bool checkCalibration(const KeyCalibrationProfile *keyProfiles, int totalKeys, bool invert_adc) {
+    Serial.println();
+    
     bool needsCalibration = false;
 
     for (int i = 0; i < totalKeys; i++) {

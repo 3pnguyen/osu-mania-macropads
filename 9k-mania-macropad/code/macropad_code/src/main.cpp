@@ -13,13 +13,14 @@
 // --------------------------------------------------- Macros ---------------------------------------------------
 
 #define FORCE_TEENSY_TO_WAIT_FOR_SERIAL 0
+#define INVERT_ADC_READINGS false
+#define LUT_SIZE 17
 
 #define ACTUATION_MM 2.0f
-#define TOP_DEADBAND_MM 0.15
-#define BOTTOM_DEADBAND_MM 0.15
+#define TOP_DEADBAND_MM 0.15f
+#define BOTTOM_DEADBAND_MM 0.15f
 #define RT_PRESS_SENSITIVITY 0.15f 
 #define RT_RELEASE_SENSITIVITY 0.15f
-#define INVERT_ADC_READINGS false
 
 #define LED_PIN 3
 #define LED_BRIGHTNESS (int)(0.5 * 255)
@@ -28,14 +29,27 @@
 // --------------------------------------------------------------------------------------------------------------
 
 const int total_sets = 2;
-
-SettingsProfile settings{};
 int selection = 0;
+ADC *adc = new ADC();
+
+int switchPins[total_keys] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9};
+bool calibrationPerSwitchValid[total_keys] = {true, true, true, true, true, true, true, true, true, true};
+SettingsProfile settings{};
 KeyCalibrationProfile keyProfiles[total_keys];
 RapidTriggerProfile rapidTriggerProfiles[total_keys];
-int switchPins[total_keys] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9};
-ADC *adc = new ADC();
-bool calibrationPerSwitchValid[total_keys] = {true, true, true, true, true, true, true, true, true, true};
+float switchDistances[total_keys] = {3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5};
+SwitchProfile switchProfiles[total_keys] = { 
+  {switchDistances[0], createLUT(LUT_SIZE, switchDistances[0])},
+  {switchDistances[1], createLUT(LUT_SIZE, switchDistances[1])},
+  {switchDistances[2], createLUT(LUT_SIZE, switchDistances[2])},
+  {switchDistances[3], createLUT(LUT_SIZE, switchDistances[3])},
+  {switchDistances[4], createLUT(LUT_SIZE, switchDistances[4])},
+  {switchDistances[5], createLUT(LUT_SIZE, switchDistances[5])},
+  {switchDistances[6], createLUT(LUT_SIZE, switchDistances[6])},
+  {switchDistances[7], createLUT(LUT_SIZE, switchDistances[7])},
+  {switchDistances[8], createLUT(LUT_SIZE, switchDistances[8])},
+  {switchDistances[9], createLUT(LUT_SIZE, switchDistances[9])}
+};
 
 void blinkLED(int pin, int brightness, int cycles, int delay_ms) {
   for (int i = 0; i < cycles; i++) {
@@ -70,6 +84,7 @@ void setup() {
 
   loadCalibration(keyProfiles, total_keys); // Load calibration data
 
+  Serial.println();
   for (int i = 0; i < 10; i++) {
     calibrationPerSwitchValid[i] = checkCalibrationIndividual(keyProfiles[i], INVERT_ADC_READINGS);
     if (calibrationPerSwitchValid[i] == true) {
@@ -97,6 +112,7 @@ void loop() {
 
     if (holdDuration > 3000) {
       runCalibration(adc, switchPins, keyProfiles, total_keys, LED_PIN, LED_BRIGHTNESS, INVERT_ADC_READINGS);
+      Serial.println();
       for (int i = 0; i < 10; i++) {
         calibrationPerSwitchValid[i] = checkCalibrationIndividual(keyProfiles[i], INVERT_ADC_READINGS);
         if (calibrationPerSwitchValid[i] == true) {
@@ -114,22 +130,20 @@ void loop() {
       }
     } else {
       selection = (selection + 1) % total_sets;
+      Serial.println();
       Serial.print("Selection = ");
       Serial.println(selection);
       blinkLED(LED_PIN, LED_BRIGHTNESS, selection + 1, LED_DELAY);
     }
   }
 
-  if (statusCheck.isReady()) { 
-    statusCheck.reset(); // shows that the serial communication is working without having to block the main loop via !serial in setup()
-    Serial.println("Working... ");
-  }
+  Serial.print("\rLive switch presses: ");
 
   for (int i = 0; i < total_keys; i++) {
     int adc_live = adc->adc0->analogRead(switchPins[i]); // Get normalized ADC value
-    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, INVERT_ADC_READINGS); // Convert normalized ADC value to distance
+    float distance_mm = getDistanceMM(adc_live, keyProfiles[i].adc_released, keyProfiles[i].adc_pressed, &switchProfiles[i],  INVERT_ADC_READINGS); // Convert normalized ADC value to distance
     const KeyCommand& command = (selection == 0) ? switchKeysSetOne[i] : switchKeysSetTwo[i];
-    
+
     if (calibrationPerSwitchValid[i] == true) {
       if (command.type == CommandType::Key) {
         isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.key);
@@ -137,5 +151,12 @@ void loop() {
         isKeyPressed(distance_mm, &rapidTriggerProfiles[i], command.text);
       }
     }
+
+    Serial.print(rapidTriggerProfiles[i].is_pressed ? "pressed (" : "- (");
+    Serial.print(distance_mm);
+    Serial.print(")");
+    if (i != total_keys - 1) Serial.print(", ");
   }
+  
+  Serial.print("        ");
 }

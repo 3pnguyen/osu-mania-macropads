@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Keyboard.h>
+#include <vector>
+#include <cmath>
 
 struct SettingsProfile {
     float actuation_mm;
@@ -17,12 +19,28 @@ struct RapidTriggerProfile {
     bool is_pressed;
 };
 
-extern SettingsProfile settings;
-extern const float total_travel_mm = 3.2f;
-extern const int lut_size = 17;
-extern const float LUT[lut_size] = { // lookup table to convert ADC value to distance
-    0.00f, 0.48f, 0.91f, 1.30f, 1.64f, 1.95f, 2.21f, 2.44f, 2.63f, 2.79f, 2.92f, 3.03f, 3.10f, 3.15f, 3.18f, 3.20f, 3.20f
+struct SwitchProfile {
+    float total_travel_mm;
+    std::vector<float> LUT;
 };
+
+extern SettingsProfile settings;
+
+inline std::vector<float> createLUT(int lut_size, float total_travel, float exponential_factor = 2.5f) {
+    std::vector<float> LUT(lut_size);  // Allocates lut_size elements
+
+    for (int i = 0; i < lut_size; i++) {
+        float raw_pct = static_cast<float>(i) /
+                        static_cast<float>(lut_size - 1);
+
+        float linearized_pct =
+            1.0f - std::pow(1.0f - raw_pct, exponential_factor);
+
+        LUT[i] = linearized_pct * total_travel; // LUT values are mm
+    }
+
+    return LUT;
+}
 
 inline void setupCalculations(float actuation_mm, float top_deadband_mm, float bottom_deadband_mm, float rt_press_sensitivity, float rt_release_sensitivity) { // setup calculations
     settings.actuation_mm = actuation_mm;
@@ -48,33 +66,47 @@ inline float normalizeADC(int adc_live, int adc_released, int adc_pressed, bool 
     return (float)(adc_live - adc_released) / (adc_pressed - adc_released);
 }
 
-inline float getDistanceMM(int adc_live, int adc_released, int adc_pressed, bool invert_adc) { // convert normalized ADC value to distance
+inline float getDistanceMM(int adc_live, int adc_released, int adc_pressed, SwitchProfile *sw_profile, bool invert_adc) { // convert normalized ADC value to distance
     float normalized_adc = normalizeADC(adc_live, adc_released, adc_pressed, invert_adc);
     
     if (normalized_adc <= 0.0f) return 0.0f; // clamp
-    if (normalized_adc >= 1.0f) return total_travel_mm;
+    if (normalized_adc >= 1.0f) return sw_profile->total_travel_mm;
     
-    float table_position = normalized_adc * (lut_size - 1); // get position in lookup table
+    float table_position = normalized_adc * (sw_profile->LUT.size() - 1); // get position in lookup table
 
     int low_index = (int)table_position;
     int high_index = low_index + 1;
     float blend = table_position - (float)low_index;
 
     // Look up the two surrounding linear percentage values
-    float y0 = LUT[low_index];
-    float y1 = LUT[high_index];
+    float y0 = sw_profile->LUT[low_index];
+    float y1 = sw_profile->LUT[high_index];
 
-    // Perform the standard linear interpolation formula: y = y0 + blend * (y1 - y0)
-    float linearized_pct = y0 + blend * (y1 - y0);
 
-    // Convert the finalized percentage to physical millimeters
-    float travel_distance = linearized_pct * total_travel_mm;
 
-    // Apply deadbands to the top and bottom of the switch
-    if (travel_distance < settings.top_deadband_mm) return 0.0f;
-    if (travel_distance > (total_travel_mm - settings.bottom_deadband_mm)) return total_travel_mm;
+    // // Perform the standard linear interpolation formula: y = y0 + blend * (y1 - y0)
+    // float linearized_pct = y0 + blend * (y1 - y0);
+
+    // // Convert the finalized percentage to physical millimeters
+    // float travel_distance = linearized_pct * sw_profile->total_travel_mm;
+
+    // // Apply deadbands to the top and bottom of the switch
+    // if (travel_distance < settings.top_deadband_mm) return 0.0f;
+    // if (travel_distance > (sw_profile->total_travel_mm - settings.bottom_deadband_mm)) return sw_profile->total_travel_mm;
     
-    return travel_distance;
+    // return travel_distance;
+
+
+
+    //Perform standard linear interpolation formula
+    float distance_mm = y0 + blend * (y1 - y0);
+
+    if (distance_mm < settings.top_deadband_mm) return 0.0f;
+    if (distance_mm > sw_profile->total_travel_mm - settings.bottom_deadband_mm) {
+        return sw_profile->total_travel_mm;
+    }
+
+    return distance_mm;
 }
 
 inline void isKeyPressed(float distance_mm, RapidTriggerProfile *key_profile, uint16_t key) { // rapid trigger under the actuation point
