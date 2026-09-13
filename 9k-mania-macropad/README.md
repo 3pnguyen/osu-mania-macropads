@@ -8,8 +8,8 @@
 <div align="center">
     <table>
         <tr>
-            <td></td>
-            <td></td>
+            <td><img src="/9k-mania-macropad/images/irl_3.jpg" width="600" /></td>
+            <td><img src="/9k-mania-macropad/images/irl_2.jpg" width="600" /></td>
         </tr>
     </table>
 </div>
@@ -33,5 +33,5 @@ Since this is hall effect, calibration is required. Using a serial web interface
 [Amazing CAD here](https://cad.onshape.com/documents/33c8147a5c2f17cd57b27675/w/b947ddb34f16f5cee758c8d2/e/cf8928f5c16dfee5f408992b?renderMode=0&uiState=6a6ab1434163ef4042b3c6e3)
 
 <div align="center">
-    <img src="/9k-mania-macropad/images/cad.png" width="600" />
+    <img src="/9k-mania-macropad/images/cad.jpg" width="600" />
 </div>

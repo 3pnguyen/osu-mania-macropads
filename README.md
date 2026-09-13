@@ -1,4 +1,4 @@
-# osu-mania-macropads [WIP]
+# osu-mania-macropads 
 
 ## A repository that combines two seperate projects of similar design intentions but different executions.
 
@@ -7,8 +7,8 @@
 <div align="center">
     <table>
         <tr>
-            <td></td>
-            <td></td>
+            <td><img src="/4k-mania-macropad/images/irl_1.jpg" width="600" /></td>
+            <td><img src="/9k-mania-macropad/images/irl_2.jpg" width="600" /></td>
         </tr>
     </table>
 </div>
@@ -16,3 +16,36 @@
 ## ✨ About
 
 At the start of the summer of 26' and as an osu! mania player, I started to develop a specialized macropad/keypad to play the game. Thinking of it as a quick and minimalistic project, that was the way I designed it. Minimalistic as in straight-up only a microcontroller and switches slapped onto a PCB. With only a total of 3 days working time, I finished it and thought it would be the end. But, my friend discovering the project, asked me to make a more "hardcore" version. Compared to the first version, we're talking about a potential of 9K mania, hall-effect switches, rapid trigger, etc. Orignally for the initial version, this repository has been repurposed to hold both. These two are brothers in arms, designed for different people with different demands but no less can be compiled together.
+
+## 🖼️ Gallery
+
+<div align="center">
+    <table>
+        <tr>
+            <td><img src="/9k-mania-macropad/images/irl_1.jpg" width="450" /></td>
+            <td><img src="/4k-mania-macropad/images/irl_2.jpg" width="450" /></td>
+        </tr>
+        <tr>
+            <td><img src="/9k-mania-macropad/images/irl_4.jpg" width="450" /></td>
+            <td><img src="/9k-mania-macropad/images/irl_3.jpg" width="450" /></td>
+        </tr>
+    </table>
+</div>
+
+<div align="center">
+    <table>
+        <tr>
+            <td><img src="/4k-mania-macropad/images/schematic.png" width="500" /></td>
+            <td><img src="/9k-mania-macropad/images/schematic.png" width="500" /></td>
+        </tr>
+    </table>
+</div>
+
+<div align="center">
+    <table>
+        <tr>
+            <td><img src="/4k-mania-macropad/images/cad.png" width="500" /></td>
+            <td><img src="/9k-mania-macropad/images/cad.jpg" width="500" /></td>
+        </tr>
+    </table>
+</div>
